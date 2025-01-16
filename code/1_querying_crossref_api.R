@@ -48,15 +48,15 @@ log_file<- paste0(log_dir, "crossref_query.log")
   tryCatch({
     # Download existing log file (if it exists)
     temp_log_file <- tempfile()
-    if (object_exists(bucket = bucket_name, object = log_file)) {
-      save_object(object = log_file, bucket = bucket_name, file = temp_log_file)
+    if (object_exists(bucket = s3_bucket, object = log_file)) {
+      save_object(object = log_file, bucket = s3_bucket, file = temp_log_file)
     }
     
     # Append the new log message
     cat(paste0(Sys.time(), " ", message, "\n"), file = temp_log_file, append = TRUE)
     
     # Upload the updated log file back to S3
-    put_object(file = temp_log_file, object = log_file, bucket = bucket_name)
+    put_object(file = temp_log_file, object = log_file, bucket = s3_bucket)
     unlink(temp_log_file) # Clean up temporary file
   }, error = function(e) {
     message(paste("Error writing log to S3:", e$message))
