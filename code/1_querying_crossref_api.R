@@ -54,10 +54,10 @@ log_message <- function(message_text) {
 # }
 
 ##### Retrieve last extract date - added by surabhi
-if (object_exists(object = date_file, bucket = bucket_name)) {
+if (object_exists(object = date_file, bucket = s3_bucket)) {
   # Download the file from S3
   temp_date_file <- tempfile()
-  save_object(object = date_file, bucket = bucket_name, file = temp_date_file)
+  save_object(object = date_file, bucket = s3_bucket, file = temp_date_file)
   
   # Read the date from the downloaded file
   date_from <- readLines(temp_date_file, warn = FALSE) %>% as.Date()
@@ -75,7 +75,7 @@ if (object_exists(object = date_file, bucket = bucket_name)) {
   writeLines(as.character(date_from), temp_date_file)
   
   # Upload the temporary file to S3
-  put_object(file = temp_date_file, object = date_file, bucket = bucket_name)
+  put_object(file = temp_date_file, object = date_file, bucket = s3_bucket)
   log_message(paste("Created date file with default date in S3:", date_from))
   
   # Clean up the temporary file
@@ -140,12 +140,12 @@ for (query in query_terms) {
 output_dir <- "data/1_crossref_responses/"
 
 # Check if the S3 prefix exists
-output_dir_exists <- length(get_bucket(bucket = bucket_name, prefix = output_dir, max = 1)) > 0
+output_dir_exists <- length(get_bucket(bucket = s3_bucket, prefix = output_dir, max = 1)) > 0
 
 # If the directory doesn't exist, create it by uploading a placeholder file
 if (!output_dir_exists) {
   cat("", file = "placeholder.txt") # Create an empty placeholder file
-  put_object(file = "placeholder.txt", object = paste0(output_dir, "placeholder.txt"), bucket = bucket_name)
+  put_object(file = "placeholder.txt", object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket)
   file.remove("placeholder.txt") # Remove the local placeholder file
   message(paste("S3 directory created:", output_dir))
 } else {
@@ -200,7 +200,7 @@ tryCatch({
   write_csv(cleaned_results_df, file = temp_file)
   
   # Upload the temporary file to S3
-  put_object(file = temp_file, object = output_file, bucket = bucket_name)
+  put_object(file = temp_file, object = output_file, bucket = s3_bucket)
   log_message("File written successfully to S3.")
   
   # Clean up the temporary file
@@ -213,7 +213,7 @@ tryCatch({
 tryCatch({
   temp_date_file <- tempfile()
   writeLines(as.character(date_to), temp_date_file)
-  put_object(file = temp_date_file, object = date_file, bucket = bucket_name)
+  put_object(file = temp_date_file, object = date_file, bucket = s3_bucket)
   log_message(paste("Updated last extraction date in S3 to:", date_to))
   
   # Clean up the temporary file
