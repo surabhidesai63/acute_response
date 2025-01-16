@@ -26,7 +26,7 @@ RUN Rscript -e "if (!requireNamespace('tidyverse', quietly = TRUE)) stop('tidyve
 RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','aws.s3'), repos='https://cran.rstudio.com/')"
 
 # Clone the GitHub repository
-RUN git clone https://github.com/cpc-analytics/acute-response-literature-clone.git /usr/src/app
+RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
 
 # Set the working directory
 WORKDIR /usr/src/app
