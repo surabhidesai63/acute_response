@@ -14,6 +14,12 @@ library(writexl)
 
 # Directory setup ----------------------------------------------------------------
 here::i_am("code/1_querying_crossref_api.R")  # confirm root path for this script
+
+# AWS S3 configuration ---------------------------------------------------------
+# Replace with your S3 bucket details
+s3_bucket <- "acute_responce_bucket"
+s3_folder <- "Acute Responses/"
+
 log_dir <- here("logs")
 data_dir <- here("data")
 log_file <- file.path(log_dir, "crossref_query.log")   # Log file path
