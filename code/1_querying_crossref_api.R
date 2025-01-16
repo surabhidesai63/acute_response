@@ -245,7 +245,7 @@ tryCatch({
 }, error = function(e) {
   log_message(paste("Error updating last extraction date in S3:", e$message))
 })
-
+}
   ###########################################
 
 log_message("Script completed successfully.")
