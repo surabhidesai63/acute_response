@@ -45,8 +45,7 @@ log_file<- paste0(log_dir, "crossref_query.log")
 
 ######## added by surabhi
 log_message <- function(message) {
-  bucket_name <- "acute-response-bucket"
-  log_file <- "logs/crossref_query.log" # S3 key for the log file
+
   # Append the log message to the log file in S3
     tryCatch({
       # Download existing log file (if it exists)
@@ -247,6 +246,6 @@ tryCatch({
   log_message(paste("Error updating last extraction date in S3:", e$message))
 })
 
-  ###########################################3
+  ###########################################
 
 log_message("Script completed successfully.")
