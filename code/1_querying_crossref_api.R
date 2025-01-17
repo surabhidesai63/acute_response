@@ -161,16 +161,17 @@ for (query in query_terms) {
   # if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 
   ########################### code added by surabhi
-output_dir <- "data/1_crossref_responses/"
+output_dir <- "data/1_crossref_responses/"  # S3 directory (prefix)
 
-# Check if the S3 prefix exists
-output_dir_exists <- length(get_bucket(bucket = s3_bucket, prefix = output_dir, max = 1)) > 0
+# Check if the S3 directory (prefix) exists
+output_dir_exists <- any(grepl(output_dir, get_bucket(bucket = s3_bucket)$Key))
 
 # If the directory doesn't exist, create it by uploading a placeholder file
 if (!output_dir_exists) {
-  cat("", file = "placeholder.txt") # Create an empty placeholder file
-  put_object(file = "placeholder.txt", object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket)
-  file.remove("placeholder.txt") # Remove the local placeholder file
+  placeholder_file <- tempfile() # Create a temporary file
+  writeLines("", placeholder_file) # Write an empty placeholder file
+  put_object(file = placeholder_file, object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket) # Upload to S3
+  file.remove(placeholder_file) # Clean up the local file
   message(paste("S3 directory created:", output_dir))
 } else {
   message(paste("S3 directory already exists:", output_dir))
