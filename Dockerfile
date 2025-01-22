@@ -23,7 +23,7 @@ RUN Rscript -e "install.packages(c('rentrez','here','aws.s3'), repos='https://cr
 
 RUN Rscript -e "if (!requireNamespace('tidyverse', quietly = TRUE)) stop('tidyverse not installed')"
 
-RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','aws.s3'), repos='https://cran.rstudio.com/')"
+RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','XML','aws.s3'), repos='https://cran.rstudio.com/')"
 
 # Clone the GitHub repository
 RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
@@ -34,5 +34,5 @@ WORKDIR /usr/src/app
 # Copy the R script
 COPY code/1_querying_crossref_api.R /usr/src/app/1_querying_crossref_api.R
 
-# Command to run the script
-CMD ["Rscript", "code/1_querying_crossref_api.R"]
+# Command to run all R scripts in queue
+CMD ["bash", "-c", "for file in *.R; do echo Running $file; Rscript $file || exit 1; done"]
