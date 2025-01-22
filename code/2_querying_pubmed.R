@@ -1,13 +1,8 @@
-# Load required libraries
-if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
-if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
-if (!requireNamespace("rentrez", quietly = TRUE)) install.packages("rentrez")
-if (!requireNamespace("XML", quietly = TRUE)) install.packages("XML")
-
 library(tidyverse)
 library(here)
 library(rentrez)
 library(XML)
+library(aws.s3) 
 
 # Directory setup --------------------------------------------------------------# xml_dir <> output_dir - optimize
 here::i_am("code/2_querying_pubmed.R")
