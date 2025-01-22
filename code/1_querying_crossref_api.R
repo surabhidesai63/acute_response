@@ -1,11 +1,4 @@
 # Load necessary packages --------------------------------------------------------
-if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
-if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
-if (!requireNamespace("rcrossref", quietly = TRUE)) install.packages("rcrossref")
-if (!requireNamespace("lubridate", quietly = TRUE)) install.packages("lubridate")
-if (!requireNamespace("writexl", quietly = TRUE)) install.packages("writexl")
-
-# Load necessary packages --------------------------------------------------------
 library(tidyverse)  
 library(here)     
 library(rcrossref)  
