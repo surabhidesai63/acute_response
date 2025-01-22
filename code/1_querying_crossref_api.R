@@ -191,3 +191,4 @@ tryCatch({
 }
 
 log_message("Script completed successfully.")
+quit(save = "no", status = 0)
