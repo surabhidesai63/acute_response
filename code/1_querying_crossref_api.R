@@ -16,34 +16,16 @@ library(aws.s3)
 # Directory setup ----------------------------------------------------------------
 here::i_am("code/1_querying_crossref_api.R")  # confirm root path for this script
 
-# log_dir <- here("logs")
-# data_dir <- here("data")
-# log_file <- file.path(log_dir, "crossref_query.log")   # Log file path
-# date_file <- file.path(data_dir, "last_crossref_extract_date.txt")  # File to store the last extract date
-
 
 # AWS S3 configuration ---------------------------------------------------------
 ###### Replace with your S3 bucket details -added by surabhi
 s3_bucket <- "acute-response-bucket"
 data_dir <- "data/"
-log_dir <- "log/"
+log_dir <- "logs/"
 date_file <- paste0(data_dir, "last_crossref_extract_date.txt")
 log_file<- paste0(log_dir, "crossref_query.log")
 
-# Ensure directories exist -------------------------------------------------------
-# if (!dir.exists(log_dir)) dir.create(log_dir, recursive = TRUE)
-# if (!dir.exists(data_dir)) dir.create(data_dir, recursive = TRUE)
 
-# Logging function ---------------------------------------------------------------
-# log_message <- function(message_text) {
-#   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-#   message <- paste0("[", timestamp, "] ", message_text, "\n")
-#   cat(message)  # Print to console
-#   write(message, file = log_file, append = TRUE)
-# }
-
-
-######## added by surabhi
 log_message <- function(message) {
 
   # Append the log message to the log file in S3
@@ -64,18 +46,6 @@ log_message <- function(message) {
       message(paste("Error writing log to S3:", e$message))
     })
 }
-######################################################3
-
-# Retrieve last extract date -----------------------------------------------------
-# if (file.exists(date_file)) {
-#   date_from <- readLines(date_file, warn = FALSE) %>% as.Date()
-#   log_message(paste("Last extraction date retrieved:", date_from))
-# } else {
-#   date_from <- as.Date("2024-12-09")  # Set default to last known extraction date
-#   log_message("No previous extraction date found. Defaulting to 2024-12-09.")
-#   writeLines(as.character(date_from), date_file)  # Create the date file with the default date
-#   log_message(paste("Created date file with default date:", date_from))
-# }
 
 ##### Retrieve last extract date - added by surabhi
 if (object_exists(object = date_file, bucket = s3_bucket)) {
@@ -156,9 +126,7 @@ for (query in query_terms) {
   cleaned_results_df <- results_df %>%
     mutate(search_date = search_date, author = sapply(author, format_authors))
   
-  # # Dynamically create the output file name
-  # output_dir <- here("data/1_crossref_responses")
-  # if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+
 
   ########################### code added by surabhi
 output_dir <- "data/1_crossref_responses/"  # S3 directory (prefix)
@@ -176,7 +144,7 @@ if (!output_dir_exists) {
 } else {
   message(paste("S3 directory already exists:", output_dir))
 }
-   ############################################3 
+  
   
   # Clean query term for file naming
   query_clean <- case_when(
@@ -190,26 +158,7 @@ if (!output_dir_exists) {
   formatted_date_from <- format(as.Date(date_from), "%m_%d")
   formatted_date_to <- format(as.Date(date_to), "%m_%d")
   
-#   output_file <- file.path(
-#     output_dir,
-#     paste0("crossref_", query_clean, "_", formatted_date_from, "_to_", formatted_date_to, ".csv")
-#   )
-  
-#   # Write results to CSV
-#   log_message(paste("Writing results to:", output_file))
-#   tryCatch({
-#     write_csv(cleaned_results_df, file = output_file)
-#     log_message("File written successfully.")
-#   }, error = function(e) {
-#     log_message(paste("Error writing file for query:", query, "Error:", e$message))
-#   })
-# }
 
-# # Update the last extraction date ------------------------------------------------
-# writeLines(as.character(date_to), date_file)
-# log_message(paste("Updated last extraction date to:", date_to))
-
-  ################################### code added by surabhi
 
   # Define the output file path in S3
 output_file <- paste0(
@@ -247,6 +196,5 @@ tryCatch({
   log_message(paste("Error updating last extraction date in S3:", e$message))
 })
 }
-  ###########################################
 
 log_message("Script completed successfully.")
