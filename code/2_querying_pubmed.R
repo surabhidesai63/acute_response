@@ -176,5 +176,7 @@ for (query in query_terms) {
 writeLines(as.character(date_to), date_file)
 log_message(paste("Updated last extraction date to:", date_to))
 
-log_message("Script completed successfully.")
+flush.console()
+closeAllConnections()
+log_message("Script completed successfully. Exiting.")
 quit(save = "no", status = 0)
