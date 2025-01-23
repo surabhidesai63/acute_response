@@ -193,4 +193,4 @@ tryCatch({
 flush.console()
 closeAllConnections()
 log_message("Script completed successfully. Exiting.")
-quit(save = "no", status = 0)
+quit()
