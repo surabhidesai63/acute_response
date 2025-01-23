@@ -190,5 +190,7 @@ tryCatch({
 })
 }
 
-log_message("Script completed successfully.")
+flush.console()
+closeAllConnections()
+log_message("Script completed successfully. Exiting.")
 quit(save = "no", status = 0)
