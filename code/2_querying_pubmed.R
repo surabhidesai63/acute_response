@@ -48,35 +48,33 @@ log_message <- function(message_text) {
 }
 
 # Retrieve last extract date ---------------------------------------------------
-tryCatch({
-    # Check if the date file exists on S3
-    obj <- get_object(object = date_file, bucket = s3_bucket)
-    date_from <- readLines(textConnection(rawToChar(obj))) %>% as.Date()
-    
-    if (is.na(date_from)) {
-      date_from <- as.Date("2024-12-09")  # Default to last known extraction date
-      log_message("No valid date found in S3 file. Defaulting to 2024-12-09.")
-    } else {
-      log_message(paste("Last extraction date retrieved from S3:", date_from))
-    }
-  }, error = function(e) {
-    # Handle case where file doesn't exist or cannot be read
-    date_from <- as.Date("2024-12-09")  # Default to last known extraction date
-    log_message("No previous extraction date found in S3. Defaulting to 2024-12-09.")
-    
-    # Create the file in S3 with the default date
-    tryCatch({
-      put_object(
-        file = textConnection(as.character(date_from)), 
-        object = date_file, 
-        bucket = bucket
-      )
-      log_message(paste("Created S3 date file with default date:", date_from))
-    }, error = function(e) {
-      log_message(paste("Failed to create S3 date file:", e$message))
-    })
-  })
+if (object_exists(object = date_file, bucket = s3_bucket)) {
+  # Download the file from S3
+  temp_date_file <- tempfile()
+  save_object(object = date_file, bucket = s3_bucket, file = temp_date_file)
   
+  # Read the date from the downloaded file
+  date_from <- readLines(temp_date_file, warn = FALSE) %>% as.Date()
+  log_message(paste("Last extraction date retrieved:", date_from))
+  
+  # Clean up the temporary file
+  unlink(temp_date_file)
+} else {
+  # Set a default date if the file doesn't exist
+  date_from <- as.Date("2024-12-09")
+  log_message("No previous extraction date found. Defaulting to 2024-12-09.")
+  
+  # Write the default date to a temporary file
+  temp_date_file <- tempfile()
+  writeLines(as.character(date_from), temp_date_file)
+  
+  # Upload the temporary file to S3
+  put_object(file = temp_date_file, object = date_file, bucket = s3_bucket)
+  log_message(paste("Created date file with default date in S3:", date_from))
+  
+  # Clean up the temporary file
+  unlink(temp_date_file)
+}
 
 date_to <- Sys.Date()  # Current date
 log_message(paste("Extracting records from:", date_from, "to:", date_to))
