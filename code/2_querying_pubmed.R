@@ -135,6 +135,21 @@ fetch_pubmed_records <- function(query, start_date, end_date) {
   if (is.null(records)) return(NULL)
   
 output_dir <- "data/2_pubmed_xml_responses/"
+   
+# Check if the S3 directory (prefix) exists
+output_dir_exists <- any(grepl(output_dir, get_bucket(bucket = s3_bucket)$Key))
+
+# If the directory doesn't exist, create it by uploading a placeholder file
+if (!output_dir_exists) {
+  placeholder_file <- tempfile() # Create a temporary file
+  writeLines("", placeholder_file) # Write an empty placeholder file
+  put_object(file = placeholder_file, object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket) # Upload to S3
+  file.remove(placeholder_file) # Clean up the local file
+  message(paste("S3 directory created:", output_dir))
+} else {
+  message(paste("S3 directory already exists:", output_dir))
+}
+   
 # Map the query to a clean name
 query_clean <- case_when(
   str_detect(query, "mpox|monkeypox|monkey pox|mpxv") ~ "mpox",
