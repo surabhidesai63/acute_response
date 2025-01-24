@@ -186,8 +186,19 @@ for (query in query_terms) {
 }
 
 # Update last extraction date --------------------------------------------------
-writeLines(as.character(date_to), date_file)
-log_message(paste("Updated last extraction date to:", date_to))
+tryCatch({
+  temp_date_file <- tempfile()
+  writeLines(as.character(date_to), temp_date_file)
+  put_object(file = temp_date_file, object = date_file, bucket = s3_bucket)
+  log_message(paste("Updated last extraction date in S3 to:", date_to))
+  
+  # Clean up the temporary file
+  unlink(temp_date_file)
+}, error = function(e) {
+  log_message(paste("Error updating last extraction date in S3:", e$message))
+})
+}
+
 
 flush.console()
 closeAllConnections()
