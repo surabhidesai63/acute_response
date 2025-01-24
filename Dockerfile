@@ -32,7 +32,8 @@ RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
 WORKDIR /usr/src/app
 
 # Copy the R script
-COPY code/1_querying_crossref_api.R /usr/src/app/1_querying_crossref_api.R
+COPY code/2_querying_pubmed.R /usr/src/app/2_querying_pubmed.R
 
 # Command to run all R scripts in queue
-CMD ["bash", "-c", "for file in *.R; do echo Running $file; Rscript $file || exit 1; done"]
+# CMD ["bash", "-c", "for file in *.R; do echo Running $file; Rscript $file || exit 1; done"]
+CMD ["Rscript", "code/2_querying_pubmed.R"]
