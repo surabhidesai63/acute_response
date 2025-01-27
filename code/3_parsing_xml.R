@@ -21,7 +21,7 @@ ensure_s3_directory <- function(bucket, dir) {
 }
 
 # Create directories in S3
-ensure_s3_directory(s3_bucket, dirname(log_file))
+ensure_s3_directory(s3_bucket, log_file)
 ensure_s3_directory(s3_bucket, xml_dir)
 ensure_s3_directory(s3_bucket, output_dir)
 
