@@ -1,42 +1,60 @@
-# Load necessary packages --------------------------------------------------------
-if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
-if (!requireNamespace("here", quietly = TRUE)) install.packages("here")
-if (!requireNamespace("XML", quietly = TRUE)) install.packages("XML")
-if (!requireNamespace("xml2", quietly = TRUE)) install.packages("xml2")
-
 library(tidyverse)
 library(here)
 library(XML)
 library(xml2)
+library(aws.s3)
 
-# Directory setup ----------------------------------------------------------------
-here::i_am("code/3_parsing_xml.R")
-log_file <- here("logs/pubmed_parsing.log")  # Log file path
-xml_dir <- here("data/2_pubmed_xml_responses")  # Directory containing XML files
-output_dir <- here("data/3_extractions_from_pubmed_xml")  # Directory to save CSV files
+# S3 Configuration
+s3_bucket <- "acute-response-bucket"
+log_file <- "logs/pubmed_parsing.log"         # Log file path in S3
+xml_dir <- "data/2_pubmed_xml_responses/"    # Directory containing XML files in S3
+output_dir <- "data/3_extractions_from_pubmed_xml/"  # Directory to save CSV files in S3
 
-# Ensure directories exist
-if (!dir.exists(dirname(log_file))) dir.create(dirname(log_file), recursive = TRUE)
-if (!dir.exists(xml_dir)) dir.create(xml_dir, recursive = TRUE)
-if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+# Ensure directories exist in S3 ------------------------------------------------
+ensure_s3_directory <- function(bucket, dir) {
+  # Check if the directory exists by listing objects
+  if (length(get_bucket(bucket = bucket, prefix = dir, max = 1)) == 0) {
+    # If not, create a placeholder object to simulate a directory
+    put_object(file = textConnection(""), object = paste0(dir, "placeholder.txt"), bucket = bucket)
+    log_message(paste("Created directory in S3:", dir))
+  }
+}
 
-# Logging function ---------------------------------------------------------------
+# Create directories in S3
+ensure_s3_directory(s3_bucket, dirname(log_file))
+ensure_s3_directory(s3_bucket, xml_dir)
+ensure_s3_directory(s3_bucket, output_dir)
+
+# Logging Function ---------------------------------------------------------------
 log_message <- function(message_text) {
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   message <- paste0("[", timestamp, "] ", message_text, "\n")
   cat(message)  # Print to console
-  write(message, file = log_file, append = TRUE)
+
+  # Write the log message to S3
+  log_content <- if (object_exists(object = log_file, bucket = s3_bucket)) {
+    # If log file exists, download it and append new log
+    s3read_using(FUN = readLines, object = log_file, bucket = s3_bucket)
+  } else {
+    character(0)
+  }
+  log_content <- c(log_content, message)
+  s3write_using(FUN = writeLines, text = log_content, object = log_file, bucket = s3_bucket)
 }
 
-# Get the most recent 3 files ---------------------------------------------------
-get_recent_files <- function(xml_dir, n = 3) {
-  # List all XML files in the directory
-  xml_files <- list.files(xml_dir, pattern = "\\.xml$", full.names = TRUE)
+# Function to get the most recent `n` XML files from an S3 directory
+get_recent_files <- function(s3_bucket, xml_dir, n = 3) {
+  # List all objects in the S3 directory
+  s3_objects <- get_bucket(bucket = s3_bucket, prefix = xml_dir)
   
-  # Extract the end dates from the file names
+  # Extract file paths and dates
   file_dates <- tibble(
-    file_path = xml_files,
-    end_date = xml_files %>%
+    file_path = s3_objects %>%
+      sapply(function(x) x$Key) %>%
+      Filter(function(path) str_detect(path, "\\.xml$"), .),  # Filter XML files
+    end_date = s3_objects %>%
+      sapply(function(x) x$Key) %>%
+      Filter(function(path) str_detect(path, "\\.xml$"), .) %>%
       str_extract("_to_\\d{4}-\\d{2}-\\d{2}\\.xml") %>%
       str_remove_all("_to_|\\.xml") %>%
       as.Date(format = "%Y-%m-%d")
@@ -51,17 +69,21 @@ get_recent_files <- function(xml_dir, n = 3) {
   return(recent_files$file_path)
 }
 
-# SUBJECT MATTER EXTRACTION function --------------------------------------------
-extract_subject_matter_from_xml <- function(file_path) {
+# Function to extract subject matter from XML files
+extract_subject_matter_from_xml <- function(file_path, output_dir) {
+  # Ensure output directory exists
+  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+  
   # Extract search date from file name
   search_date <- file_path %>%
     str_extract("_to_\\d{4}-\\d{2}-\\d{2}\\.xml") %>%
     str_remove_all("_to_|\\.xml") %>%
     as.Date(format = "%Y-%m-%d")
   
+  # Read the XML file
   xml_doc <- read_xml(file_path)
   
-  # Create empty lists to store extracted info
+  # Initialize lists to store extracted data
   list_pmids <- vector("character")
   list_titles <- vector("character")
   list_abstracts <- vector("character")
@@ -76,65 +98,68 @@ extract_subject_matter_from_xml <- function(file_path) {
   list_dois <- vector("character")
   list_authors <- vector("character")
   
-  # Extracting the <PubmedArticle> elements
+  # Extract <PubmedArticle> elements
   pubmed_articles <- xml_find_all(xml_doc, "/PubmedArticleSet/PubmedArticle")
   
   for (pubmed_article in pubmed_articles) {
     # Extract <MedlineCitation> section
     medline_node <- xml_find_first(pubmed_article, ".//MedlineCitation")
-    pmid <- xml_text(xml_find_first(medline_node, ".//PMID"))
+    pmid <- xml_text(xml_find_first(medline_node, ".//PMID"), trim = TRUE)
     
-    # In context <Article>
+    # Extract article details
     node_article <- xml_find_first(medline_node, ".//Article")
-    title <- xml_text(xml_find_first(node_article, ".//ArticleTitle"))
-    abstracts <- xml_text(xml_find_all(node_article, ".//Abstract/AbstractText"))
-    languages <- xml_text(xml_find_all(node_article, ".//Language"))
+    title <- xml_text(xml_find_first(node_article, ".//ArticleTitle"), trim = TRUE)
+    abstracts <- xml_text(xml_find_all(node_article, ".//Abstract/AbstractText"), trim = TRUE)
+    languages <- xml_text(xml_find_all(node_article, ".//Language"), trim = TRUE)
     
-    # DOI extraction from PubmedData
-    doi <- xml_text(xml_find_first(pubmed_article, ".//PubmedData/ArticleIdList/ArticleId[@IdType='doi']"))
+    # Extract DOI
+    doi <- xml_text(xml_find_first(pubmed_article, ".//PubmedData/ArticleIdList/ArticleId[@IdType='doi']"), trim = TRUE)
     
-    # In context <MedlineCitation>, looking for MESH terms
+    # Extract MESH terms
     node_MESHs <- xml_find_all(medline_node, ".//MeshHeadingList/MeshHeading")
     list_MESHs_inter <- vector("character")
     for (MESH in node_MESHs) {
-      descriptor <- xml_text(xml_find_first(MESH, ".//DescriptorName"))
-      qualifiers <- xml_text(xml_find_all(MESH, ".//QualifierName"))
+      descriptor <- xml_text(xml_find_first(MESH, ".//DescriptorName"), trim = TRUE)
+      qualifiers <- xml_text(xml_find_all(MESH, ".//QualifierName"), trim = TRUE)
       MESH_local <- paste(c(descriptor, qualifiers), collapse = " ")
       list_MESHs_inter <- c(list_MESHs_inter, MESH_local)
     }
     
-    # In context <MedlineCitation>
-    keywords <- xml_text(xml_find_all(medline_node, ".//KeywordList/Keyword"))
+    # Extract keywords
+    keywords <- xml_text(xml_find_all(medline_node, ".//KeywordList/Keyword"), trim = TRUE)
     
-    # In context <Journal>
+    # Extract journal details
     node_journal <- xml_find_first(node_article, ".//Journal")
-    journal_title <- xml_text(xml_find_first(node_journal, ".//Title"))
-    journal_issn <- xml_text(xml_find_first(node_journal, ".//ISSN"))
-    journal_volume <- xml_text(xml_find_first(node_journal, ".//Volume"))
-    journal_issue <- xml_text(xml_find_first(node_journal, ".//Issue"))
-    journal_date <- paste(xml_text(xml_find_first(node_journal, ".//PubDate/Year")),
-                          xml_text(xml_find_first(node_journal, ".//PubDate/Month")),
-                          xml_text(xml_find_first(node_journal, ".//PubDate/Day")), sep = "-")
+    journal_title <- xml_text(xml_find_first(node_journal, ".//Title"), trim = TRUE)
+    journal_issn <- xml_text(xml_find_first(node_journal, ".//ISSN"), trim = TRUE)
+    journal_volume <- xml_text(xml_find_first(node_journal, ".//Volume"), trim = TRUE)
+    journal_issue <- xml_text(xml_find_first(node_journal, ".//Issue"), trim = TRUE)
+    journal_date <- paste(
+      xml_text(xml_find_first(node_journal, ".//PubDate/Year"), trim = TRUE),
+      xml_text(xml_find_first(node_journal, ".//PubDate/Month"), trim = TRUE),
+      xml_text(xml_find_first(node_journal, ".//PubDate/Day"), trim = TRUE),
+      sep = "-"
+    )
     
-    # Author extraction
+    # Extract authors
     node_authors <- xml_find_all(medline_node, ".//Author")
     authors_list <- vector("character")
     for (author in node_authors) {
-      fore_name <- xml_text(xml_find_first(author, "ForeName"))
-      last_name <- xml_text(xml_find_first(author, "LastName"))
+      fore_name <- xml_text(xml_find_first(author, "ForeName"), trim = TRUE)
+      last_name <- xml_text(xml_find_first(author, "LastName"), trim = TRUE)
       if (!is.na(fore_name) && !is.na(last_name)) {
         authors_list <- c(authors_list, paste(fore_name, last_name))
       }
     }
     authors <- paste(authors_list, collapse = ", ")
     
-    # Append the data to our lists
+    # Append extracted data to lists
     list_pmids <- c(list_pmids, pmid)
     list_titles <- c(list_titles, title)
     list_abstracts <- c(list_abstracts, paste(abstracts, collapse = "--NEW SECTION--"))
     list_languages <- c(list_languages, paste(languages, collapse = ";"))
     list_dois <- c(list_dois, doi)
-    list_MESHs <- c(list_MESHs, paste0(list_MESHs_inter, collapse = ""))
+    list_MESHs <- c(list_MESHs, paste0(list_MESHs_inter, collapse = " "))
     list_keywords <- c(list_keywords, paste(keywords, collapse = "[AND]"))
     list_journal_title <- c(list_journal_title, journal_title)
     list_journal_issn <- c(list_journal_issn, journal_issn)
@@ -162,7 +187,7 @@ extract_subject_matter_from_xml <- function(file_path) {
     search_date = search_date
   )
   
-  # Update file naming logic
+  # Generate output file name
   output_file <- file.path(
     output_dir,
     paste0(
@@ -174,23 +199,43 @@ extract_subject_matter_from_xml <- function(file_path) {
         TRUE ~ "unknown"
       ),
       "_",
-      format(search_date, "%m_%d"),
+      format(search_date, "%Y_%m_%d"),
       ".csv"
     )
   )
   
-  # Write the dataframe to a CSV file
-  write_csv(df_subject_matter, output_file)
-  log_message(paste("Parsed and saved to:", output_file))
+  # Save the dataframe to a CSV file
+  write.csv(df_subject_matter, output_file, row.names = FALSE)
+  log_message(paste("Parsed and saved data to:", output_file))
 }
-
-# Main script -------------------------------------------------------------------
+# Main Script -------------------------------------------------------------------
 log_message("Starting XML parsing script...")
-recent_files <- get_recent_files(xml_dir, n = 3)
 
+# Get the most recent files
+tryCatch(
+  {
+    recent_files <- get_recent_files(xml_dir, n = 3)
+    if (length(recent_files) == 0) {
+      log_message("No recent XML files found. Exiting script.")
+      quit(save = "no", status = 0)  # Exit gracefully if no files to process
+    }
+  },
+  error = function(e) {
+    log_message(paste("Error in fetching recent files:", e$message))
+    quit(save = "no", status = 1)  # Exit with error status
+  }
+)
+
+# Process each file
 for (file_path in recent_files) {
-  log_message(paste("Processing file:", file_path))
-  extract_subject_matter_from_xml(file_path)
+  tryCatch(
+    {
+      log_message(paste("Processing file:", file_path))
+      extract_subject_matter_from_xml(file_path, output_dir)
+      log_message(paste("Successfully processed file:", file_path))
+    },
+    error = function(e) {
+      log_message(paste("Error processing file:", file_path, " - ", e$message))
+    }
+  )
 }
-
-log_message("XML parsing script completed successfully.")
