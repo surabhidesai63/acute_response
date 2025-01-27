@@ -23,7 +23,7 @@ RUN Rscript -e "install.packages(c('rentrez','here','aws.s3'), repos='https://cr
 
 RUN Rscript -e "if (!requireNamespace('tidyverse', quietly = TRUE)) stop('tidyverse not installed')"
 
-RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','XML','aws.s3'), repos='https://cran.rstudio.com/')"
+RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','XML','xml2','aws.s3'), repos='https://cran.rstudio.com/')"
 
 # Clone the GitHub repository
 RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
@@ -32,8 +32,8 @@ RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
 WORKDIR /usr/src/app
 
 # Copy the R script
-COPY code/2_querying_pubmed.R /usr/src/app/2_querying_pubmed.R
+COPY code/3_parsing_xml.R /usr/src/app/3_parsing_xml.R
 
 # Command to run all R scripts in queue
 # CMD ["bash", "-c", "for file in *.R; do echo Running $file; Rscript $file || exit 1; done"]
-CMD ["Rscript", "code/2_querying_pubmed.R"]
+CMD ["Rscript", "code/3_parsing_xml.R"]
