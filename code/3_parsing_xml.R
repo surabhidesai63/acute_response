@@ -21,14 +21,14 @@ if (!dir_exists) {
   writeLines("", placeholder_file) # Write an empty placeholder file
   put_object(file = placeholder_file, object = paste0(dir, "placeholder.txt"), bucket = bucket) # Upload to S3
   file.remove(placeholder_file) # Clean up the local file
-  message(paste("S3 directory created:", dir))
+  log_message(paste("S3 directory created:", dir))
 } else {
-  message(paste("S3 directory already exists:", dir))
+  log_message(paste("S3 directory already exists:", dir))
 }
 
    # After checking or creating the directory, remove the placeholder file
   delete_object(object = paste0(dir, "placeholder.txt"), bucket = bucket)
-  message(paste("Removed placeholder file from S3:", dir))
+  log_message(paste("Removed placeholder file from S3:", dir))
 }
 
 # # Create directories in S3 /// commenting - runtime issues
@@ -252,8 +252,8 @@ for (file_path in recent_files) {
   tryCatch(
     {
       log_message(paste("Processing file:", file_path))
-      # temp_file <- tempfile(fileext = ".xml")
-      # save_object(object = file_path, bucket = s3_bucket, file = temp_file)
+      temp_file <- tempfile(fileext = ".xml")
+      save_object(object = file_path, bucket = s3_bucket, file = temp_file)
      
       extract_subject_matter_from_xml(file_path)
       log_message(paste("Successfully processed file:", file_path))
