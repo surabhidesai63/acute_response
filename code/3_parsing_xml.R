@@ -86,7 +86,7 @@ get_recent_files <- function( xml_dir, n = 3) {
 }
 
 # Function to extract subject matter from XML files
-extract_subject_matter_from_xml <- function(file_path, output_dir) {
+extract_subject_matter_from_xml <- function(file_path) {
   # # Ensure output directory exists
   # if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
   
@@ -252,10 +252,10 @@ for (file_path in recent_files) {
   tryCatch(
     {
       log_message(paste("Processing file:", file_path))
-      temp_file <- tempfile(fileext = ".xml")
-      save_object(object = file_path, bucket = s3_bucket, file = temp_file)
+      # temp_file <- tempfile(fileext = ".xml")
+      # save_object(object = file_path, bucket = s3_bucket, file = temp_file)
      
-      extract_subject_matter_from_xml(temp_file, output_dir)
+      extract_subject_matter_from_xml(file_path)
       log_message(paste("Successfully processed file:", file_path))
     },
     error = function(e) {
