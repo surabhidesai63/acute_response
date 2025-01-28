@@ -26,7 +26,7 @@ ensure_s3_directory <- function(bucket, dir) {
 # ensure_s3_directory(s3_bucket, output_dir)
 
 # Logging Function ---------------------------------------------------------------
-log_message <- function(message_text) {
+log_message <- function(message) {
 
   # Append the log message to the log file in S3
     tryCatch({
