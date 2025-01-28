@@ -27,19 +27,24 @@ ensure_s3_directory <- function(bucket, dir) {
 
 # Logging Function ---------------------------------------------------------------
 log_message <- function(message_text) {
-  timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-  message <- paste0("[", timestamp, "] ", message_text, "\n")
-  cat(message)  # Print to console
 
-  # Write the log message to S3
-  log_content <- if (object_exists(object = log_file, bucket = s3_bucket)) {
-    # If log file exists, download it and append new log
-    s3read_using(FUN = readLines, object = log_file, bucket = s3_bucket)
-  } else {
-    character(0)
-  }
-  log_content <- c(log_content, message)
-  s3write_using(FUN = writeLines, text = log_content, object = log_file, bucket = s3_bucket)
+  # Append the log message to the log file in S3
+    tryCatch({
+      # Download existing log file (if it exists)
+      temp_log_file <- tempfile()
+      if (object_exists(bucket = s3_bucket, object = log_file)) {
+        save_object(object = log_file, bucket = s3_bucket, file = temp_log_file)
+      }
+      
+      # Append the new log message
+      cat(paste0(Sys.time(), " ", message, "\n"), file = temp_log_file, append = TRUE)
+      
+      # Upload the updated log file back to S3
+      put_object(file = temp_log_file, object = log_file, bucket = s3_bucket)
+      unlink(temp_log_file) # Clean up temporary file
+    }, error = function(e) {
+      message(paste("Error writing log to S3:", e$message))
+    })
 }
 
 # Function to get the most recent `n` XML files from an S3 directory
