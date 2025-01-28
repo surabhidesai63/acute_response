@@ -20,10 +20,10 @@ ensure_s3_directory <- function(bucket, dir) {
   }
 }
 
-# Create directories in S3
-ensure_s3_directory(s3_bucket, log_file)
-ensure_s3_directory(s3_bucket, xml_dir)
-ensure_s3_directory(s3_bucket, output_dir)
+# # Create directories in S3 /// commenting - runtime issues
+# ensure_s3_directory(s3_bucket, log_file)
+# ensure_s3_directory(s3_bucket, xml_dir)
+# ensure_s3_directory(s3_bucket, output_dir)
 
 # Logging Function ---------------------------------------------------------------
 log_message <- function(message_text) {
