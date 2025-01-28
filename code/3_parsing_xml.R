@@ -253,7 +253,7 @@ for (file_path in recent_files) {
     {
       log_message(paste("Processing file:", file_path))
       temp_file <- tempfile(fileext = ".xml")
-      save_object(object = file_path, bucket = bucket, file = temp_file)
+      save_object(object = file_path, bucket = s3_bucket, file = temp_file)
      
       extract_subject_matter_from_xml(temp_file, output_dir)
       log_message(paste("Successfully processed file:", file_path))
