@@ -25,10 +25,14 @@ if (!dir_exists) {
 } else {
   message(paste("S3 directory already exists:", dir))
 }
+
+   # After checking or creating the directory, remove the placeholder file
+  delete_object(object = paste0(dir, "placeholder.txt"), bucket = bucket)
+  message(paste("Removed placeholder file from S3:", dir))
 }
 
 # # Create directories in S3 /// commenting - runtime issues
-ensure_s3_directory(s3_bucket, log_file)
+# ensure_s3_directory(s3_bucket, log_file)
 ensure_s3_directory(s3_bucket, xml_dir)
 ensure_s3_directory(s3_bucket, output_dir)
 
@@ -55,7 +59,7 @@ log_message <- function(message) {
 }
 
 # Function to get the most recent `n` XML files from an S3 directory
-get_recent_files <- function(s3_bucket, xml_dir, n = 3) {
+get_recent_files <- function( xml_dir, n = 3) {
   # List all objects in the S3 directory
   s3_objects <- get_bucket(bucket = s3_bucket, prefix = xml_dir)
   
