@@ -87,8 +87,8 @@ get_recent_files <- function( xml_dir, n = 3) {
 
 # Function to extract subject matter from XML files
 extract_subject_matter_from_xml <- function(file_path, output_dir) {
-  # Ensure output directory exists
-  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+  # # Ensure output directory exists
+  # if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
   
   # Extract search date from file name
   search_date <- file_path %>%
@@ -220,8 +220,13 @@ extract_subject_matter_from_xml <- function(file_path, output_dir) {
     )
   )
   
-  # Save the dataframe to a CSV file
-  write.csv(df_subject_matter, output_file, row.names = FALSE)
+  temp_file <- tempfile(fileext = ".csv")  
+  # Save the dataframe to the temporary file
+  write.csv(df, temp_file, row.names = FALSE)  
+  # Upload the file to S3
+  put_object(file = temp_file, object = output_file, bucket = s3_bucket)  
+  # Clean up by removing the temporary file
+  file.remove(temp_file)
   log_message(paste("Parsed and saved data to:", output_file))
 }
 # Main Script -------------------------------------------------------------------
@@ -247,7 +252,10 @@ for (file_path in recent_files) {
   tryCatch(
     {
       log_message(paste("Processing file:", file_path))
-      extract_subject_matter_from_xml(file_path, output_dir)
+      temp_file <- tempfile(fileext = ".xml")
+      save_object(object = file_path, bucket = bucket, file = temp_file)
+     
+      extract_subject_matter_from_xml(temp_file, output_dir)
       log_message(paste("Successfully processed file:", file_path))
     },
     error = function(e) {
