@@ -222,7 +222,7 @@ extract_subject_matter_from_xml <- function(file_path, output_dir) {
   
   temp_file <- tempfile(fileext = ".csv")  
   # Save the dataframe to the temporary file
-  write.csv(df, temp_file, row.names = FALSE)  
+  write.csv(df_subject_matter, temp_file, row.names = FALSE)  
   # Upload the file to S3
   put_object(file = temp_file, object = output_file, bucket = s3_bucket)  
   # Clean up by removing the temporary file
