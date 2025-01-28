@@ -12,18 +12,25 @@ output_dir <- "data/3_extractions_from_pubmed_xml/"  # Directory to save CSV fil
 
 # Ensure directories exist in S3 ------------------------------------------------
 ensure_s3_directory <- function(bucket, dir) {
-  # Check if the directory exists by listing objects
-  if (length(get_bucket(bucket = bucket, prefix = dir, max = 1)) == 0) {
-    # If not, create a placeholder object to simulate a directory
-    put_object(file = textConnection(""), object = paste0(dir, "placeholder.txt"), bucket = bucket)
-    log_message(paste("Created directory in S3:", dir))
-  }
+ # Check if the S3 directory (prefix) exists
+dir_exists <- any(grepl(dir, get_bucket(bucket = bucket)$Key))
+
+# If the directory doesn't exist, create it by uploading a placeholder file
+if (!dir_exists) {
+  placeholder_file <- tempfile() # Create a temporary file
+  writeLines("", placeholder_file) # Write an empty placeholder file
+  put_object(file = placeholder_file, object = paste0(dir, "placeholder.txt"), bucket = bucket) # Upload to S3
+  file.remove(placeholder_file) # Clean up the local file
+  message(paste("S3 directory created:", dir))
+} else {
+  message(paste("S3 directory already exists:", dir))
+}
 }
 
 # # Create directories in S3 /// commenting - runtime issues
-# ensure_s3_directory(s3_bucket, log_file)
-# ensure_s3_directory(s3_bucket, xml_dir)
-# ensure_s3_directory(s3_bucket, output_dir)
+ensure_s3_directory(s3_bucket, log_file)
+ensure_s3_directory(s3_bucket, xml_dir)
+ensure_s3_directory(s3_bucket, output_dir)
 
 # Logging Function ---------------------------------------------------------------
 log_message <- function(message) {
