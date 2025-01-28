@@ -255,7 +255,7 @@ for (file_path in recent_files) {
       temp_file <- tempfile(fileext = ".xml")
       save_object(object = file_path, bucket = s3_bucket, file = temp_file)
      
-      extract_subject_matter_from_xml(file_path)
+      extract_subject_matter_from_xml(temp_file)
       log_message(paste("Successfully processed file:", file_path))
     },
     error = function(e) {
