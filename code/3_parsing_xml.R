@@ -8,7 +8,7 @@ library(aws.s3)
 s3_bucket <- "acute-response-bucket"
 log_file <- "logs/pubmed_parsing.log"         # Log file path in S3
 xml_dir <- "data/2_pubmed_xml_responses/"    # Directory containing XML files in S3
-output_dir <- "data/3_extractions_from_pubmed_xml/"  # Directory to save CSV files in S3
+output_dir <- "data/3_extractions_from_pubmed_xml"  # Directory to save CSV files in S3
 
 # Ensure directories exist in S3 ------------------------------------------------
 ensure_s3_directory <- function(bucket, dir) {
