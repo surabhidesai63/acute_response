@@ -21,14 +21,14 @@ if (!dir_exists) {
   writeLines("", placeholder_file) # Write an empty placeholder file
   put_object(file = placeholder_file, object = paste0(dir, "placeholder.txt"), bucket = bucket) # Upload to S3
   file.remove(placeholder_file) # Clean up the local file
-  log_message(paste("S3 directory created:", dir))
+  message(paste("S3 directory created:", dir))
 } else {
-  log_message(paste("S3 directory already exists:", dir))
+  message(paste("S3 directory already exists:", dir))
 }
 
    # After checking or creating the directory, remove the placeholder file
   delete_object(object = paste0(dir, "placeholder.txt"), bucket = bucket)
-  log_message(paste("Removed placeholder file from S3:", dir))
+  message(paste("Removed placeholder file from S3:", dir))
 }
 
 # # Create directories in S3 /// commenting - runtime issues
@@ -86,7 +86,7 @@ get_recent_files <- function( xml_dir, n = 3) {
 }
 
 # Function to extract subject matter from XML files
-extract_subject_matter_from_xml <- function(file_path) {
+extract_subject_matter_from_xml <- function(file_path,temp_file) {
   # # Ensure output directory exists
   # if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
   
@@ -97,7 +97,7 @@ extract_subject_matter_from_xml <- function(file_path) {
     as.Date(format = "%Y-%m-%d")
   
   # Read the XML file
-  xml_doc <- read_xml(file_path)
+  xml_doc <- read_xml(temp_file)
   
   # Initialize lists to store extracted data
   list_pmids <- vector("character")
@@ -220,13 +220,13 @@ extract_subject_matter_from_xml <- function(file_path) {
     )
   )
   
-  temp_file <- tempfile(fileext = ".csv")  
+  temp_file1 <- tempfile(fileext = ".csv")  
   # Save the dataframe to the temporary file
-  write.csv(df_subject_matter, temp_file, row.names = FALSE)  
+  write.csv(df_subject_matter, temp_file1, row.names = FALSE)  
   # Upload the file to S3
-  put_object(file = temp_file, object = output_file, bucket = s3_bucket)  
+  put_object(file = temp_file1, object = output_file, bucket = s3_bucket)  
   # Clean up by removing the temporary file
-  file.remove(temp_file)
+  file.remove(temp_file1)
   log_message(paste("Parsed and saved data to:", output_file))
 }
 # Main Script -------------------------------------------------------------------
@@ -255,7 +255,7 @@ for (file_path in recent_files) {
       temp_file <- tempfile(fileext = ".xml")
       save_object(object = file_path, bucket = s3_bucket, file = temp_file)
      
-      extract_subject_matter_from_xml(temp_file)
+      extract_subject_matter_from_xml(file_path,temp_file)
       log_message(paste("Successfully processed file:", file_path))
     },
     error = function(e) {
