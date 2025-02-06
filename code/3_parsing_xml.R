@@ -97,7 +97,7 @@ extract_subject_matter_from_xml <- function(file_path,temp_file) {
     as.Date(format = "%Y-%m-%d")
   
   # Read the XML file
-  xml_doc <- read_xml(temp_file)
+  xml_doc <- read_xml(get_object(object = file_path, bucket = s3_bucket))
   
   # Initialize lists to store extracted data
   list_pmids <- vector("character")
@@ -252,8 +252,8 @@ for (file_path in recent_files) {
   tryCatch(
     {
       log_message(paste("Processing file:", file_path))
-      temp_file <- tempfile(fileext = ".xml")
-      save_object(object = file_path, bucket = s3_bucket, file = temp_file)
+      # temp_file <- tempfile(fileext = ".xml")
+      # save_object(object = file_path, bucket = s3_bucket, file = temp_file)
      
       extract_subject_matter_from_xml(file_path,temp_file)
       log_message(paste("Successfully processed file:", file_path))
