@@ -32,8 +32,12 @@ RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
 WORKDIR /usr/src/app
 
 # Copy the R script
-COPY code/3_parsing_xml.R /usr/src/app/3_parsing_xml.R
+# COPY code/3_parsing_xml.R /usr/src/app/3_parsing_xml.R
 
-# Command to run all R scripts in queue
-# CMD ["bash", "-c", "for file in *.R; do echo Running $file; Rscript $file || exit 1; done"]
-CMD ["Rscript", "code/3_parsing_xml.R"]
+# CMD ["Rscript", "code/3_parsing_xml.R"]
+
+# Copy the entire code directory
+COPY code/ /usr/src/app/code/
+
+# Run all R scripts in the code directory sequentially
+CMD ["bash", "-c", "for file in code/*.R; do echo Running $file; Rscript $file || exit 1; done"]
