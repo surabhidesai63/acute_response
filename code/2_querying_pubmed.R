@@ -148,7 +148,7 @@ if (!output_dir_exists) {
   message(paste("S3 directory already exists:", output_dir))
 }
   # After checking or creating the directory, remove the placeholder file
-  delete_object(object = paste0(output_dir, "placeholder.txt"), bucket = bucket)
+  delete_object(object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket)
   message(paste("Removed placeholder file from S3:", output_dir))  
    
 # Map the query to a clean name
