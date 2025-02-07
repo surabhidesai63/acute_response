@@ -23,7 +23,7 @@ RUN Rscript -e "install.packages(c('rentrez','here','aws.s3'), repos='https://cr
 
 RUN Rscript -e "if (!requireNamespace('tidyverse', quietly = TRUE)) stop('tidyverse not installed')"
 
-RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','XML','xml2','aws.s3'), repos='https://cran.rstudio.com/')"
+RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','XML','xml2','aws.s3','stringr'), repos='https://cran.rstudio.com/')"
 
 # Clone the GitHub repository
 RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
