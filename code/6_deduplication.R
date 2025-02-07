@@ -7,7 +7,7 @@ library(aws.s3)
 # S3 Configuration
 s3_bucket <- "acute-response-bucket"
 log_file <- "logs/deduplication.log"
-processed_dir <- "data/processed/"
+processed_dir <- "data/processed"
 
 ensure_s3_directory <- function(bucket, dir) {
  # Check if the S3 directory (prefix) exists
@@ -160,8 +160,11 @@ add_tslug <- function(dataset) {
     return(dataset)  # Return original dataset unchanged
   }
 
+  # dataset %>%
+  #   mutate(title_tslug = map_chr(title, generate_tslug, .default = NA_character_))  # Handle NA values safely
+  safe_generate_tslug <- possibly(generate_tslug, otherwise = NA_character_)
   dataset %>%
-    mutate(title_tslug = map_chr(title, generate_tslug, .default = NA_character_))  # Handle NA values safely
+    mutate(title_tslug = map_chr(title, safe_generate_tslug))
 }
 
 cumulative_mpox <- add_tslug(cumulative_mpox)
