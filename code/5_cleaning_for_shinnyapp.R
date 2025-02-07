@@ -15,7 +15,6 @@ processed_dir <- "data/processed/"
 
 ensure_s3_directory <- function(bucket, dir) {
 
-  
 dir_exists <- any(grepl(dir, get_bucket(bucket = bucket)$Key))
 
 # If the directory doesn't exist, create it by uploading a placeholder file
@@ -261,4 +260,7 @@ save_to_s3(combined_flu, paste0(processed_dir, "flu_processed_", current_date, "
 save_to_s3(combined_dengue, paste0(processed_dir, "dengue_processed_", current_date, ".csv"))
 
 log_message("Processed datasets saved successfully.")
-log_message("Script completed successfully.")
+flush.console()
+closeAllConnections()
+log_message("Script #5 completed successfully. Exiting.")
+quit()
