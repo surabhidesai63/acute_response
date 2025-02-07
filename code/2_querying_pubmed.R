@@ -197,10 +197,8 @@ tryCatch({
 }, error = function(e) {
   log_message(paste("Error updating last extraction date in S3:", e$message))
 })
-}
-
 
 flush.console()
 closeAllConnections()
-log_message("Script completed successfully. Exiting.")
+log_message("Script #2 completed successfully. Exiting.")
 quit()
