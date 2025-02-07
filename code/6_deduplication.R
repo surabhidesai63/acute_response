@@ -230,4 +230,7 @@ save_to_s3(deduplicated_mpox, file.path(processed_dir, paste0("mpox_processed_cu
 save_to_s3(deduplicated_flu, file.path(processed_dir, paste0("flu_processed_cumulative_", current_date, ".csv")))
 save_to_s3(deduplicated_dengue, file.path(processed_dir, paste0("dengue_processed_cumulative_", current_date, ".csv")))
 
-log_message("Deduplication script completed successfully.")
+flush.console()
+closeAllConnections()
+log_message("Script #6 completed successfully. Exiting")
+quit()
