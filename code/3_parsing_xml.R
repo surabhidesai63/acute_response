@@ -266,5 +266,5 @@ for (file_path in recent_files) {
 
 flush.console()
 closeAllConnections()
-log_message("Script completed successfully. Exiting.")
+log_message("Script #3 completed successfully. Exiting.")
 quit()
