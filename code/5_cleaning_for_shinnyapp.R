@@ -23,14 +23,14 @@ if (!dir_exists) {
   writeLines("", placeholder_file) # Write an empty placeholder file
   put_object(file = placeholder_file, object = paste0(dir, "placeholder.txt"), bucket = bucket) # Upload to S3
   file.remove(placeholder_file) # Clean up the local file
-  log_message(paste("S3 directory created:", dir))
+ message(paste("S3 directory created:", dir))
 } else {
-  log_message(paste("S3 directory already exists:", dir))
+  message(paste("S3 directory already exists:", dir))
 }
 
    # After checking or creating the directory, remove the placeholder file
   delete_object(object = paste0(dir, "placeholder.txt"), bucket = bucket)
-  log_message(paste("Removed placeholder file from S3:", dir))
+  message(paste("Removed placeholder file from S3:", dir))
 }
 
 # # Create directories in S3 /// commenting - runtime issues
