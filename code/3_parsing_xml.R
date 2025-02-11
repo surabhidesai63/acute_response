@@ -34,7 +34,7 @@ if (!dir_exists) {
 # # Create directories in S3 /// commenting - runtime issues
 # ensure_s3_directory(s3_bucket, log_file)
 ensure_s3_directory(s3_bucket, xml_dir)
-ensure_s3_directory(s3_bucket, output_dir)
+ensure_s3_directory(s3_bucket, 'data/3_extractions_from_pubmed_xml/')
 
 # Logging Function ---------------------------------------------------------------
 log_message <- function(message) {
