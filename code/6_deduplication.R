@@ -31,7 +31,7 @@ if (!dir_exists) {
 
 # # Create directories in S3 /// commenting - runtime issues
 
-ensure_s3_directory(s3_bucket, processed_dir)
+ensure_s3_directory(s3_bucket, 'data/processed/')
 
 # Logging Function ---------------------------------------------------------------
 log_message <- function(message) {
