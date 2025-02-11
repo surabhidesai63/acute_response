@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.3.0
+FROM rocker/r-base:latest
 
 # Install system dependencies
 RUN apt-get update -qq && apt-get install -y \
@@ -19,11 +19,9 @@ RUN apt-get update -qq && apt-get install -y \
 RUN Rscript -e "install.packages('tidyverse', repos='https://cran.rstudio.com/', dependencies = TRUE)"
 
 # Install additional R packages
-RUN Rscript -e "install.packages(c('rentrez','here','aws.s3'), repos='https://cran.rstudio.com/')"
+RUN Rscript -e "install.packages(c('rentrez','here','aws.s3','rcrossref','lubridate','writexl','XML','xml2','stringr'), repos='https://cran.rstudio.com/')"
 
-RUN Rscript -e "if (!requireNamespace('tidyverse', quietly = TRUE)) stop('tidyverse not installed')"
-
-RUN Rscript -e "install.packages(c('rcrossref','lubridate','writexl','XML','xml2','aws.s3','stringr'), repos='https://cran.rstudio.com/')"
+# RUN Rscript -e "if (!requireNamespace('tidyverse', quietly = TRUE)) stop('tidyverse not installed')"
 
 # Clone the GitHub repository
 RUN git clone https://github.com/surabhidesai63/acute_response.git /usr/src/app
