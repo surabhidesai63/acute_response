@@ -40,4 +40,5 @@ WORKDIR /usr/src/app
 COPY code/ /usr/src/app/code/
 
 # Run all R scripts in the code directory sequentially
-CMD ["bash", "-c", "for file in code/*.R; do echo Running $file; Rscript $file || exit 1; done"]
+# CMD ["bash", "-c", "for file in code/*.R; do echo Running $file; Rscript $file || exit 1; done"]
+CMD ["bash", "-c", "for file in code/*.R; do echo Running $file; Rscript $file || exit 1; done; exit 0"]
