@@ -132,37 +132,42 @@ print("Loaded the latest batch of CrossRef and PubMed datasets.")
 clean_crossref_data <- function(data) {
   log_message("cleaning crossref...")
 
-  # Ensure 'abstract' column exists before using mutate()
+  # Ensure necessary columns exist
   if (!"abstract" %in% colnames(data)) {
-    data$abstract <- NA_character_  # Create an empty column to prevent errors
+    data$abstract <- NA_character_
+  }
+  if (!"indexed" %in% colnames(data)) {
+    data$indexed <- NA_character_
+  }
+  if (!"container.title" %in% colnames(data)) {
+    data$container.title <- NA_character_
   }
 
   data %>%
-    # Select only available columns
-    select(
-      all_of(intersect(
-        c("container.title", "title", "abstract", "language", "author", "indexed", "doi", "type", "url", "search_date"),
-        colnames(data)
-      ))
-    ) %>%
+    # Select only the available columns
+    select(any_of(c("container.title", "title", "abstract", "language", "author", 
+                    "indexed", "doi", "type", "url", "search_date"))) %>%
+    
     rename(
       journal_title = container.title,
       journal_date = indexed
     ) %>%
+    
     mutate(
       source = "Crossref",
-      journal_date = as.character(journal_date),  # Ensure journal_date is character
+      journal_date = as.character(journal_date),  # Convert to character
+      
+      # Clean abstract text while handling NA values safely
       abstract = ifelse(!is.na(abstract),
-                        sapply(abstract, function(x) {
+                        purrr::map_chr(abstract, function(x) {
                           tryCatch({
-                            plain_text <- gsub("<[^>]+>", " ", x)  # Remove XML tags
-                            plain_text <- gsub("^(Abstract|ABSTRACT)[[:space:][:punct:]]*", "", plain_text, ignore.case = TRUE)
-                            str_squish(plain_text)  # Remove extra whitespace
-                          }, error = function(e) {
-                            x  # Return original abstract if processing fails
-                          })
+                            x %>%
+                              gsub("<[^>]+>", " ", .) %>%  # Remove HTML/XML tags
+                              gsub("^(Abstract|ABSTRACT)[[:space:][:punct:]]*", "", ., ignore.case = TRUE) %>%
+                              stringr::str_squish()  # Remove extra spaces
+                          }, error = function(e) NA_character_)  # Return NA if error occurs
                         }),
-                        NA)  # Handle cases where the abstract is NA
+                        NA_character_)  # Ensure NA is returned if abstract is missing
     )
 }
 
