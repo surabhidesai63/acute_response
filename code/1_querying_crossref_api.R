@@ -172,6 +172,11 @@ tryCatch({
   
   # Clean up the temporary file
   unlink(temp_file)
+  
+ # After checking or creating the directory, remove the placeholder file
+    delete_object(object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket)
+  message(paste("Removed placeholder file from S3:", output_dir)) 
+  
 }, error = function(e) {
   log_message(paste("Error writing file for query:", query, "Error:", e$message))
 })
