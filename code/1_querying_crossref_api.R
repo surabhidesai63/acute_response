@@ -124,8 +124,11 @@ for (query in query_terms) {
   ########################### code added by surabhi
 output_dir <- "data/1_crossref_responses/"  # S3 directory (prefix)
 
-# Check if the S3 directory (prefix) exists
-output_dir_exists <- any(grepl(output_dir, get_bucket(bucket = s3_bucket)$Key))
+# Get all object keys from the bucket
+keys <- sapply(get_bucket(bucket = s3_bucket), function(obj) obj$Key)
+
+# Check if the directory exists
+output_dir_exists <- any(startsWith(keys, output_dir))
 
 # If the directory doesn't exist, create it by uploading a placeholder file
 if (!output_dir_exists) {
@@ -137,7 +140,9 @@ if (!output_dir_exists) {
 } else {
   message(paste("S3 directory already exists:", output_dir))
 }
-  
+  # After checking or creating the directory, remove the placeholder file
+    delete_object(object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket)
+  message(paste("Removed placeholder file from S3:", output_dir))  
   
   # Clean query term for file naming
   query_clean <- case_when(
@@ -172,10 +177,6 @@ tryCatch({
   
   # Clean up the temporary file
   unlink(temp_file)
-  
- # After checking or creating the directory, remove the placeholder file
-    delete_object(object = paste0(output_dir, "placeholder.txt"), bucket = s3_bucket)
-  message(paste("Removed placeholder file from S3:", output_dir)) 
   
 }, error = function(e) {
   log_message(paste("Error writing file for query:", query, "Error:", e$message))
