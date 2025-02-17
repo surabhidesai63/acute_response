@@ -6,7 +6,7 @@ library(aws.s3)
 
 # Directory setup --------------------------------------------------------------# xml_dir <> output_dir - optimize
 here::i_am("code/2_querying_pubmed.R")
-
+Sys.setenv("AWS_DEFAULT_REGION" = "eu-north-1")  # Set your region
 # AWS S3 configuration --------------------------------------------------------
 s3_bucket <- "acute-response-bucket"
 data_dir <- "data/"
