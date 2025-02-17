@@ -134,8 +134,11 @@ fetch_pubmed_records <- function(query, start_date, end_date) {
   
 output_dir <- "data/2_pubmed_xml_responses/"
    
-# Check if the S3 directory (prefix) exists
-output_dir_exists <- any(grepl(output_dir, get_bucket(bucket = s3_bucket)$Key))
+# Get all object keys from the bucket
+keys <- sapply(get_bucket(bucket = s3_bucket), function(obj) obj$Key)
+
+# Check if the directory exists
+output_dir_exists <- any(startsWith(keys, output_dir))
 
 # If the directory doesn't exist, create it by uploading a placeholder file
 if (!output_dir_exists) {
