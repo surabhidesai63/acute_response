@@ -4,6 +4,7 @@ library(here)
 library(aws.s3)    
 
 # Directory setup ----------------------------------------------------------------
+Sys.setenv("AWS_DEFAULT_REGION" = "eu-north-1")  # Set your region
 # S3 Configuration
 s3_bucket <- "acute-response-bucket"
 log_file <- "logs/deduplication.log"
