@@ -15,7 +15,10 @@ processed_dir <- "data/processed/"
 
 ensure_s3_directory <- function(bucket, dir) {
 
-dir_exists <- any(grepl(dir, get_bucket(bucket = bucket)$Key))
+# Get all object keys from the bucket
+keys <- sapply(get_bucket(bucket = bucket), function(obj) obj$Key)
+# Check if the directory exists
+dir_exists <- any(startsWith(keys, dir))
 
 # If the directory doesn't exist, create it by uploading a placeholder file
 if (!dir_exists) {
