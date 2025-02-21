@@ -4,7 +4,7 @@ library(XML)
 library(xml2)
 library(aws.s3)
 
-Sys.setenv("AWS_DEFAULT_REGION" = "eu-north-1")  # Set your region
+
 # S3 Configuration
 s3_bucket <- "acute-response-bucket"
 log_file <- "logs/pubmed_parsing.log"         # Log file path in S3
