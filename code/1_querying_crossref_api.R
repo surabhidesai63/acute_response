@@ -6,10 +6,7 @@ library(lubridate)
 library(writexl)
 library(aws.s3) 
 
-# Directory setup ----------------------------------------------------------------
-here::i_am("code/1_querying_crossref_api.R")  # confirm root path for this script
 
-Sys.setenv("AWS_DEFAULT_REGION" = "eu-north-1")  # Set your region
 # AWS S3 configuration ---------------------------------------------------------
 ###### Replace with your S3 bucket details -added by surabhi
 s3_bucket <- "acute-response-bucket"
